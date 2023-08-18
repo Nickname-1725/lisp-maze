@@ -1,3 +1,21 @@
+;;;; 迷宫节点的数据结构
+
+; 迷宫节点的数据结构定义为
+; (prev (dir1 dir2 dir2))
+; 1. 其中prev表示上一个节点，即由何方位的相邻节点到达该节点
+; 2. 如果是迷宫生成的起始点，则prev 为'nil
+; 3. dir1, dir2, dir3表示下一节点，即向何方位到达相通的相邻节点
+; 4. 方位均由'w, 'a, 's, 'd表示
+
+(defun Create-node ()
+  (copy-list '(:prev nil :dir-list ())))
+(defmacro get-node-key (node key)
+  `(getf ,node ,key))
+(defun set-node-prev (node value)
+  (setf (get-node-key node :prev) value))
+(defun add-node-dir-list (node new-dir)
+  (setf (get-node-key node :dir-list)
+        (cons new-dir (get-node-key node :dir-list))))
 
 ;;;; 存储迷宫结构的数据结构
 
@@ -10,19 +28,17 @@
 
 (defun generate-table ()
   "构造一个*H-maze*行、*W-maze*列的迷宫"
-  (let ((table nil))
+  (let ((table (make-array `(,*H-maze* ,*W-maze*) :initial-element (Create-node))))
     (dotimes (i *H-maze*)
-      (let ((single-row nil))
-        (dotimes (j *W-maze*)
-          (setq single-row (cons (create-node) (copy-list single-row))))
-        (setq table (cons  (reverse single-row) table))))
+      (dotimes (j *W-maze*)
+        (setf (aref table i j) (Create-node))))
     table))
 
 (defparameter *table-maze* (generate-table))
 
 (defmacro get-node (i-j)
   "根据下标访问元素。根据(i j)坐标访问第i行、第j列节点"
-  `(nth (nth 1 ,i-j) (nth (nth 0 ,i-j) *table-maze*)))
+  `(aref ,*table-maze* (nth 0 ,i-j) (nth 1 ,i-j)))
 
 (defun neibour-node (i-j dir step)
   "从节点(i j)出发，向dir方向行走step布"
@@ -51,25 +67,6 @@
          (current (get-node i-j)))
     (or (member dir (get-node-key current :dir-list))
         (member (opposite-dir dir) (get-node-key next :dir-list)))))
-
-;;;; 迷宫节点的数据结构
-
-; 迷宫节点的数据结构定义为
-; (prev (dir1 dir2 dir2))
-; 1. 其中prev表示上一个节点，即由何方位的相邻节点到达该节点
-; 2. 如果是迷宫生成的起始点，则prev 为'nil
-; 3. dir1, dir2, dir3表示下一节点，即向何方位到达相通的相邻节点
-; 4. 方位均由'w, 'a, 's, 'd表示
-
-(defun Create-node ()
-  '(:prev nil :dir-list ()))
-(defmacro get-node-key (node key)
-  `(getf ,node ,key))
-(defun set-node-prev (node value)
-  (setf (get-node-key node :prev) value))
-(defun add-node-dir-list (node new-dir)
-  (setf (get-node-key node :dir-list)
-        (cons new-dir (get-node-key node :dir-list))))
 
 ;;;; 迷宫的生成算法
 (defun i-j-legal-p (i-j)
