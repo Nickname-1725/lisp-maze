@@ -4,12 +4,6 @@
 ; 1. 双层列表嵌套
 ; 2. 外层列表作为迷宫的行，内层列表作为迷宫的列
 ; 3. 内层列表内的列表作为迷宫的节点
-; 4. 迷宫节点的数据结构定义为
-;    (prev (dir1 dir2 dir2))
-;    1) 其中prev表示上一个节点，即由何方位的相邻节点到达该节点
-;    2) 如果是迷宫生成的起始点，则prev 为'nil
-;    3) dir1, dir2, dir3表示下一节点，即向何方位到达相通的相邻节点
-;    4) 方位均由'w, 'a, 's, 'd表示
 
 (defparameter *W-maze* 5)
 (defparameter *H-maze* 5)
@@ -20,8 +14,8 @@
     (dotimes (i *H-maze*)
       (let ((single-row nil))
         (dotimes (j *W-maze*)
-          (setq single-row (cons '(nil ()) single-row)))
-        (setq table (cons single-row table))))
+          (setq single-row (cons (create-node) (copy-list single-row))))
+        (setq table (cons  (reverse single-row) table))))
     table))
 
 (defparameter *table-maze* (generate-table))
@@ -53,9 +47,29 @@
 (defun link-p (i-j dir)
   "节点(i j)向dir方向是否连通（不判断相邻节点的合法性）"
   (let* ((next-i-j (next-node i-j dir))
-         (next (get-node next-i-j)))
-    (or (member dir (nth 1 (get-node i-j)))
-        (member (opposite-dir dir) (nth 1 next)))))
+         (next (get-node next-i-j))
+         (current (get-node i-j)))
+    (or (member dir (get-node-key current :dir-list))
+        (member (opposite-dir dir) (get-node-key next :dir-list)))))
+
+;;;; 迷宫节点的数据结构
+
+; 迷宫节点的数据结构定义为
+; (prev (dir1 dir2 dir2))
+; 1. 其中prev表示上一个节点，即由何方位的相邻节点到达该节点
+; 2. 如果是迷宫生成的起始点，则prev 为'nil
+; 3. dir1, dir2, dir3表示下一节点，即向何方位到达相通的相邻节点
+; 4. 方位均由'w, 'a, 's, 'd表示
+
+(defun Create-node ()
+  '(:prev nil :dir-list ()))
+(defmacro get-node-key (node key)
+  `(getf ,node ,key))
+(defun set-node-prev (node value)
+  (setf (get-node-key node :prev) value))
+(defun add-node-dir-list (node new-dir)
+  (setf (get-node-key node :dir-list)
+        (cons new-dir (get-node-key node :dir-list))))
 
 ;;;; 迷宫的生成算法
 (defun i-j-legal-p (i-j)
@@ -85,8 +99,8 @@
                                    (not (link-p i-j dir)))
                               (progn
                                 ;给当前节点标记可行方位；给next节点标记prev方位"
-                                (setf (nth 1 (get-node i-j)) (cons dir (nth 1 (get-node i-j))))
-                                (setf (nth 0 (get-node next-i-j)) (opposite-dir dir))
+                                (add-node-dir-list (get-node i-j) dir)
+                                (set-node-prev (get-node next-i-j) (opposite-dir dir))
                                 (print next-i-j)
                                 ;继续探索下一节点"
                                 (explore next-i-j))
@@ -96,7 +110,7 @@
                )))
     (if (i-j-legal-p init-i-j)
         (progn
-          (setf (get-node init-i-j) '(nil ()))
+          ;(set-node-prev (get-node i-j) nil)
           (explore init-i-j))
         nil)))
 
