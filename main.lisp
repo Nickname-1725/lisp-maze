@@ -120,22 +120,16 @@
                                    (not (done-node-p (get-node next-i-j))))
                               (progn(let ((next (get-node next-i-j))
                                           (current (get-node i-j)))
-                                ;给当前节点标记可行方位；给next节点标记prev方位"
+                                       ;给当前节点标记可行方位；给next节点标记prev方位"
                                       (add-node-dir-list current dir)
                                       (set-node-prev next (opposite-dir dir))
-                                      (print next-i-j)
-                                ;添加已探所节点
+                                      ;添加已探所节点
                                       (done-node next)
-                                      ;(when (eq (nth 0 next-i-j) 4) (return))
-                                ;继续探索下一节点"
+                                      ;继续探索下一节点"
                                       (explore next-i-j)))
-                              nil)))
-               ;"在穷尽所有可能的方位后，选择退回上一节点"
-               ;'(do somethin else)
-               )))
+                              nil))))))
     (if (i-j-legal-p init-i-j)
         (progn
-          ;(set-node-prev (get-node i-j) nil)
           (explore init-i-j))
         nil)))
 
