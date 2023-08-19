@@ -68,6 +68,30 @@
     (or (member dir (get-node-key current :dir-list))
         (member (opposite-dir dir) (get-node-key next :dir-list)))))
 
+;;;; 存储已开启节点、待探索边界的数据结构
+(defun create-todo-edge (i-j dir)
+  "定义待探索edge的数据结构，以构造函数的形式表示
+   存储坐标为(i j)的节点指向dir方向的edge"
+  `(:node-i-j ,i-j :dir ,dir))
+
+(defparameter *done-node-list* nil)
+(defparameter *todo-edge-list* nil)
+
+(defun done-node-p (node)
+  (find node *done-node-list*))
+(defmacro done-node (node)
+  "操作：添加已开启node（无需移除）"
+  `(push ,node *done-node-list*))
+
+(defun push-todo (i-j dir)
+  "操作：添加待探索edge"
+  (cons (create-todo-edge i-j dir) *todo-edge-list*))
+(defun pop-todo ()
+  "操作：弹出待探索edge"
+  (let ((todo-edge (car *todo-edge-list*)))
+    (setf *todo-edge-list* (cdr *todo-edge-list*))
+    todo-edge))
+
 ;;;; 迷宫的生成算法
 (defun i-j-legal-p (i-j)
   (let ((i (nth 0 i-j))
@@ -91,16 +115,20 @@
              (let ((todo (todo-list)))
                (loop for dir in todo
                      do (let ((next-i-j (next-node i-j dir)))
-                          "判断相邻节点合法性，且必须尚未连通"
+                          ;判断相邻节点合法性，且必须尚未开启
                           (if (and (i-j-legal-p next-i-j)
-                                   (not (link-p i-j dir)))
-                              (progn
+                                   (not (done-node-p (get-node next-i-j))))
+                              (progn(let ((next (get-node next-i-j))
+                                          (current (get-node i-j)))
                                 ;给当前节点标记可行方位；给next节点标记prev方位"
-                                (add-node-dir-list (get-node i-j) dir)
-                                (set-node-prev (get-node next-i-j) (opposite-dir dir))
-                                (print next-i-j)
+                                      (add-node-dir-list current dir)
+                                      (set-node-prev next (opposite-dir dir))
+                                      (print next-i-j)
+                                ;添加已探所节点
+                                      (done-node next)
+                                      ;(when (eq (nth 0 next-i-j) 4) (return))
                                 ;继续探索下一节点"
-                                (explore next-i-j))
+                                      (explore next-i-j)))
                               nil)))
                ;"在穷尽所有可能的方位后，选择退回上一节点"
                ;'(do somethin else)
