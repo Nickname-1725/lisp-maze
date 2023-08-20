@@ -1,13 +1,9 @@
 ;;;; 迷宫节点的数据结构
 
-; 迷宫节点的数据结构定义为
-; (prev (dir1 dir2 dir2))
-; 1. 其中prev表示上一个节点，即由何方位的相邻节点到达该节点
-; 2. 如果是迷宫生成的起始点，则prev 为'nil
-; 3. dir1, dir2, dir3表示下一节点，即向何方位到达相通的相邻节点
-; 4. 方位均由'w, 'a, 's, 'd表示
-
-(defun Create-node ()
+(defun create-node ()
+  "prev表示前继节点，由何方向相邻节点到达该节点
+   dir-list表示后继节点列表，自该节点可到达何方向诸节点
+   方向均由键盘按键'w, 'a, 's, 'd表示"
   (copy-list '(:prev nil :dir-list ())))
 (defmacro get-node-key (node key)
   `(getf ,node ,key))
@@ -19,19 +15,15 @@
 
 ;;;; 存储迷宫结构的数据结构
 
-; 1. 双层列表嵌套
-; 2. 外层列表作为迷宫的行，内层列表作为迷宫的列
-; 3. 内层列表内的列表作为迷宫的节点
-
 (defparameter *W-maze* 20)
 (defparameter *H-maze* 20)
 
 (defun generate-table ()
-  "构造一个*H-maze*行、*W-maze*列的迷宫"
-  (let ((table (make-array `(,*H-maze* ,*W-maze*) :initial-element (Create-node))))
+  "构造一个*H-maze*行、*W-maze*列的迷宫；内部储存节点"
+  (let ((table (make-array `(,*H-maze* ,*W-maze*) :initial-element (create-node))))
     (dotimes (i *H-maze*)
       (dotimes (j *W-maze*)
-        (setf (aref table i j) (Create-node))))
+        (setf (aref table i j) (create-node))))
     table))
 
 (defparameter *table-maze* (generate-table))
