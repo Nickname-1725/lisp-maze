@@ -23,8 +23,8 @@
 ; 2. 外层列表作为迷宫的行，内层列表作为迷宫的列
 ; 3. 内层列表内的列表作为迷宫的节点
 
-(defparameter *W-maze* 5)
-(defparameter *H-maze* 5)
+(defparameter *W-maze* 20)
+(defparameter *H-maze* 20)
 
 (defun generate-table ()
   "构造一个*H-maze*行、*W-maze*列的迷宫"
@@ -61,12 +61,14 @@
         ((eql dir 'd) 'a)))
 
 (defun link-p (i-j dir)
-  "节点(i j)向dir方向是否连通（不判断相邻节点的合法性）"
-  (let* ((next-i-j (next-node i-j dir))
-         (next (get-node next-i-j))
-         (current (get-node i-j)))
-    (or (member dir (get-node-key current :dir-list))
-        (member (opposite-dir dir) (get-node-key next :dir-list)))))
+  "节点(i j)向dir方向是否连通（若相邻节点的不合法，则认为不连通）"
+  (let ((next-i-j (next-node i-j dir)))
+    (if (i-j-legal-p next-i-j)
+        (let ((next (get-node next-i-j))
+              (current (get-node i-j)))
+          (or (member dir (get-node-key current :dir-list))
+              (member (opposite-dir dir) (get-node-key next :dir-list))))
+        nil)))
 
 ;;;; 存储已开启节点、待探索边界的数据结构
 (defun create-todo-edge (i-j dir)
@@ -112,6 +114,7 @@
                    "当todo列表填满第4个方位时，返回该列表"
                    (when (nth 3 todo) (return todo))))))
            (explore (i-j)
+             (done-node (get-node i-j)) ; 将当前节点标记为已开启
              (let ((todo (todo-list)))
                (loop for dir in todo
                      do (let ((next-i-j (next-node i-j dir)))
@@ -123,8 +126,6 @@
                                        ;给当前节点标记可行方位；给next节点标记prev方位"
                                       (add-node-dir-list current dir)
                                       (set-node-prev next (opposite-dir dir))
-                                      ;添加已探所节点
-                                      (done-node next)
                                       ;继续探索下一节点"
                                       (explore next-i-j)))
                               nil))))))
@@ -133,5 +134,28 @@
           (explore init-i-j))
         nil)))
 
+;;;; 迷宫的渲染
+
+(defun draw-maze ()
+  (flet ((draw-crossing (i-j)
+           (let ((enum 0))
+             (when (link-p i-j 'w) (setf enum (+ enum (ash 1 0))))
+             (when (link-p i-j 's) (setf enum (+ enum (ash 1 1))))
+             (when (link-p i-j 'a) (setf enum (+ enum (ash 1 2))))
+             (when (link-p i-j 'd) (setf enum (+ enum (ash 1 3))))
+             (let ((crossing-list '("X " "↑ " "↓ " "│ "
+                                    "─ " "┘ " "┐ " "┤ "
+                                    " ─" "└─" "┌─" "├─"
+                                    "──" "┴─" "┬─" "┼─")))
+               (nth enum crossing-list)
+               ;(format nil "~a~t" enum)
+               ))))
+    (let ((text-maze ""))
+      (dotimes (i *H-maze*)
+        (let ((text-row ""))
+          (dotimes (j *W-maze*)
+            (setf text-row (concatenate 'string  text-row (draw-crossing `(,i ,j)))))
+         (setf text-maze (concatenate 'string text-maze (format nil "~%") text-row))))
+      text-maze)))
 
 
