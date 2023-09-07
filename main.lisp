@@ -127,7 +127,10 @@
         nil)))
 
 ;;;; 迷宫的渲染
-
+(defparameter *user-ij* '(0 0))
+(defun eq-ij-p (ij-1 ij-2)
+  (and (eq (car ij-1) (car ij-2))
+       (eq (cadr ij-1) (cadr ij-2))))
 (defun draw-maze ()
   (flet ((draw-crossing (i-j)
            (let ((enum 0))
@@ -135,13 +138,16 @@
              (when (link-p i-j 's) (setf enum (+ enum (ash 1 1))))
              (when (link-p i-j 'a) (setf enum (+ enum (ash 1 2))))
              (when (link-p i-j 'd) (setf enum (+ enum (ash 1 3))))
-             (let ((crossing-list '("X " "↑ " "↓ " "│ "
+             (let ((crossing-list '("O " "↑ " "↓ " "│ "
                                     "─ " "┘ " "┐ " "┤ "
                                     " ─" "└─" "┌─" "├─"
-                                    "──" "┴─" "┬─" "┼─")))
-               (nth enum crossing-list)
-               ;(format nil "~a~t" enum)
-               ))))
+                                    "──" "┴─" "┬─" "┼─"
+                                    "X ")))
+               (cond ((eq-ij-p i-j *user-ij*)
+                      (car crossing-list))
+                     ((eq-ij-p i-j `(,(1- *H-maze*) ,(1- *W-maze*)))
+                      (nth 16 crossing-list))
+                     (t (nth enum crossing-list)))))))
     (let ((text-maze ""))
       (dotimes (i *H-maze*)
         (let ((text-row ""))
@@ -150,4 +156,30 @@
          (setf text-maze (concatenate 'string text-maze (format nil "~%") text-row))))
       text-maze)))
 
+;;;; REPL
+(defun move-user (dir)
+  (let ((usr-ij (copy-list *user-ij*)))
+    (cond ((eq dir 'w) (incf (car usr-ij) -1))
+          ((eq dir 'a) (incf (cadr usr-ij) -1))
+          ((eq dir 's) (incf (car usr-ij) 1))
+          ((eq dir 'd) (incf (cadr usr-ij) 1))
+          (t nil))
+    ;(print (i-j-legal-p usr-ij))
+    ;(print usr-ij)
+    ;(print *user-ij*)
+    (if (and (i-j-legal-p usr-ij)
+             (link-p *user-ij* dir))
+        (setf *user-ij* usr-ij))))
+(defun repl()
+  (let* ((cmd-string (read-line))
+         (cmd (if (eq 0 (length cmd-string))
+                  nil
+                  (read-from-string cmd-string))))
+    (unless (eq cmd 'quit)      
+      (format t "[W] for up; ~%[A] for left; ~%[S] for down; ~%[D] for right;~%")
+      (format t "[quit] to leave the game. ~%")
+      (move-user cmd)
+      (format t "~a~%" (draw-maze))
+      (repl))))
 
+(init-maze '(5 5))
