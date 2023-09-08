@@ -190,7 +190,7 @@
                  (let* ((cmd-string (string-trim " " (read-line)))
                         (cmd (if (eq 0 (length cmd-string))
                                  nil (read-from-string cmd-string))))
-                   (cond ((eq cmd 'y) (restart-maze *H-maze* *W-maze*))
+                   (cond ((eq cmd 'y) (restart-maze *H-maze* *W-maze*)(repl))
                          ((eq cmd 'n) nil)
                          (t (repl-loop))))))
         (repl-loop))))
