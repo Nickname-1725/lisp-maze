@@ -15,8 +15,8 @@
 
 ;;;; 存储迷宫结构的数据结构
 
-(defparameter *W-maze* 20)
-(defparameter *H-maze* 20)
+(defparameter *W-maze* 2)
+(defparameter *H-maze* 2)
 
 (defun generate-table ()
   "构造一个*H-maze*行、*W-maze*列的迷宫；内部储存节点"
@@ -26,11 +26,11 @@
         (setf (aref table i j) (create-node))))
     table))
 
-(defparameter *table-maze* (generate-table))
+(defparameter *table-maze*  nil)
 
 (defmacro get-node (i-j)
   "根据下标访问元素。根据(i j)坐标访问第i行、第j列节点"
-  `(aref ,*table-maze* (nth 0 ,i-j) (nth 1 ,i-j)))
+  `(aref *table-maze* (nth 0 ,i-j) (nth 1 ,i-j)))
 
 (defun neibour-node (i-j dir step)
   "从节点(i j)出发，向dir方向行走step布"
@@ -159,8 +159,10 @@
 ;;;; REPL
 (defparameter *last-dir* nil)
 (defun restart-maze (height width)
+  (setf *user-ij* '(0 0))
   (setf *H-maze* height)
   (setf *W-maze* width)
+  (setf *table-maze* (generate-table))
   (init-maze `(,(ash *H-maze* -1) ,(ash *W-maze* -1))))
 (defun move-user (dir)
   (let ((usr-ij (copy-list *user-ij*)))
@@ -176,22 +178,42 @@
           (setf *last-dir* dir)))))
 (defun information-maze ()
   (format t "~c[2J~c[H" #\escape #\escape)
-  (format t "[W] for up; ~%[A] for left; ~%[S] for down; ~%[D] for right; ~%Directions can be input without a break. ~%")
-  (format t "[quit] to leave the game. ~%"))
+  (print "[W] for up; ~%[A] for left; ~%[S] for down; ~%[D] for right; ~%Directions can be input without a break. ")
+  (print "[q] to leave the game. ")
+  (print "[r] to reshape the maze and restart the game. ")
+  (format t "~a~%" (draw-maze)))
+
 (defun repl()
+  (information-maze)
   (let* ((cmd-string (read-line))
          (cmd-list (mapcar #'read-from-string
-                           (mapcar #'string (coerce cmd-string 'list))))
-         (cmd (if (eq 0 (length cmd-string))
-                  nil
-                  (read-from-string cmd-string))))
-    (unless (eq cmd 'quit)
-      (information-maze)
-      (if cmd-list
-          (mapcar #'move-user cmd-list)
-          (move-user *last-dir*))
-      (format t "~a~%" (draw-maze))
-      (repl))))
+                           (mapcar #'string
+                                   (remove-if #'(lambda(char)
+                                                  (eq char #\ ))
+                                              (coerce cmd-string 'list))))))
+    (cond ((and (eq (length cmd-list) 1) (eq (car cmd-list) 'q)) nil)
+          ((and (eq (length cmd-list) 1) (eq (car cmd-list) 'r))
+           (flet ((resize-repl()
+                    (format t "Enter 2 numbers to customize the size. ~%")
+                    (let* ((size-pair (read-from-string
+                                       (concatenate 'string "(" (read-line) ")")))
+                           (h (car size-pair))
+                           (w (cadr size-pair)))
+                      (cond ((not (eq 2 (length size-pair)))
+                             (print "Size share be 2 numbers: height and width. ")
+                             (read-line)
+                             (repl))
+                            ((or (< h 2) (< w 2))
+                             (print "Don't be ridiculous. height and width share be at least 3. ")
+                             (read-line)
+                             (repl))
+                            (t (restart-maze h w)
+                               (repl))))))
+             (resize-repl)))
+          (t (if cmd-list
+                 (mapcar #'move-user cmd-list)
+                 (move-user *last-dir*))
+             (repl)))))
 
 (restart-maze 20 20)
-(information-maze)
+;(information-maze)
