@@ -157,6 +157,11 @@
       text-maze)))
 
 ;;;; REPL
+(defparameter *last-dir* nil)
+(defun restart-maze (height width)
+  (setf *H-maze* height)
+  (setf *W-maze* width)
+  (init-maze `(,(ash *H-maze* -1) ,(ash *W-maze* -1))))
 (defun move-user (dir)
   (let ((usr-ij (copy-list *user-ij*)))
     (cond ((eq dir 'w) (incf (car usr-ij) -1))
@@ -166,19 +171,27 @@
           (t nil))
     (if (and (i-j-legal-p usr-ij)
              (link-p *user-ij* dir))
-        (setf *user-ij* usr-ij))))
+        (progn
+          (setf *user-ij* usr-ij)
+          (setf *last-dir* dir)))))
+(defun information-maze ()
+  (format t "~c[2J~c[H" #\escape #\escape)
+  (format t "[W] for up; ~%[A] for left; ~%[S] for down; ~%[D] for right; ~%Directions can be input without a break. ~%")
+  (format t "[quit] to leave the game. ~%"))
 (defun repl()
   (let* ((cmd-string (read-line))
-         (cmd-list (mapcar 'read-from-string
+         (cmd-list (mapcar #'read-from-string
                            (mapcar #'string (coerce cmd-string 'list))))
          (cmd (if (eq 0 (length cmd-string))
                   nil
                   (read-from-string cmd-string))))
     (unless (eq cmd 'quit)
-      (format t "[W] for up; ~%[A] for left; ~%[S] for down; ~%[D] for right;~%")
-      (format t "[quit] to leave the game. ~%")
-      (mapcar #'move-user cmd-list)
+      (information-maze)
+      (if cmd-list
+          (mapcar #'move-user cmd-list)
+          (move-user *last-dir*))
       (format t "~a~%" (draw-maze))
       (repl))))
 
-(init-maze '(5 5))
+(restart-maze 20 20)
+(information-maze)
