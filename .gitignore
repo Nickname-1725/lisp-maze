@@ -2,3 +2,5 @@
 *.fasl
 *.fas
 .#-emacs*
+*.o
+maze
