@@ -10,7 +10,7 @@
   (color-black 0) (color-red 1) (color-green 2) (color-yellow 3)
   (color-blue 4) (color-magenta 5) (color-cyan 6) (color-white 7))
 (cffi:defcenum texture-pair
-  (grass-pair 1) (empty-pair 1) (water-pair 2) (mountain-pair 3) (player-pair 4))
+  (playground-pair 0) (menu-light-pair 1) (menu-dark-pair 2))
 (cffi:defcenum local-category
   (lc-all 0) (lc-collate 1) (lc-ctype 2) (lc-monetary 3) (lc-numeric 4) (lc-time 5))
 
@@ -36,11 +36,11 @@
 
 (defparameter *stdscr* nil)
 
-(defun draw-map ()
-  ;(let (y x))
-  (ncurses-attron (ncurses-color-pair grass-pair))
-  (ncurses-mvhline 2 0 (char-code #\space) 20)
-  (ncurses-attroff (ncurses-color-pair grass-pair)))
+;(defun draw-map ()
+;  ;(let (y x))
+;  (ncurses-attron (ncurses-color-pair grass-pair))
+;  (ncurses-mvhline 2 0 (char-code #\space) 20)
+;  (ncurses-attroff (ncurses-color-pair grass-pair)))
 
 (defun key-input ()
   (let ((ch (ncurses-getch)))
@@ -48,7 +48,7 @@
            nil)
           (t (key-input)))))
 
-(defun init-fun* ()
+(defun init-TUI ()
   (ncurses-setlocale lc-all "")
   (setf *stdscr* (ncurses-initscr))
   (ncurses-cbreak)
@@ -57,13 +57,9 @@
   
   ;; 初始化颜色
   (ncurses-start-color)
-  (ncurses-init-pair grass-pair color-yellow color-green)
-  (ncurses-init-pair water-pair color-cyan color-blue)
-  (ncurses-init-pair mountain-pair color-black color-white)
-  (ncurses-init-pair player-pair color-red color-magenta)
+  (ncurses-init-pair playground-pair color-black color-black)
+  (ncurses-init-pair menu-light-pair color-black color-cyan)
+  (ncurses-init-pair menu-dark-pair color-white color-blue)
   
-  (draw-map)
-  (ncurses-refresh)
-  
-  (key-input)
-  (ncurses-endwin))
+  ;(draw-map)
+  (ncurses-refresh))
