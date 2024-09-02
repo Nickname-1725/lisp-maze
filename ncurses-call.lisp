@@ -1,8 +1,8 @@
 
 (cffi:define-foreign-library ncurses
-  (:unix (:or "/usr/lib/x86_64-linux-gnu/libncurses.so.6"
-              "/usr/lib/x86_64-linux-gnu/libncurses.so"))
-  (t (:default "libncurses")))
+  (:unix (:or "/usr/lib/x86_64-linux-gnu/libncursesw.so.6"
+              "/usr/lib/x86_64-linux-gnu/libncursesw.so"))
+  (t (:default "libncursesw")))
 
 (cffi:use-foreign-library ncurses)
 
@@ -26,6 +26,17 @@
 (cffi:defcfun ("clear" ncurses-clear) :void)
 (cffi:defcfun ("refresh" ncurses-refresh) :void)
 (cffi:defcfun ("endwin" ncurses-endwin) :void)
+
+(cffi:defcfun ("newwin" ncurses-newwin) :pointer
+  (num-of-lines :int) (num-of-cols :int) (start-y :int) (start-x :int))
+(cffi:defcfun ("delwin" ncurses-delwin) :int (window-to-delete :pointer))
+(cffi:defcfun ("wbkgd" ncurses-wbkgd) :int (win :pointer) (character texture-pair))
+(cffi:defcfun ("wclear" ncurses-wclear) :int (win :pointer))
+(cffi:defcfun ("waddstr" ncurses-waddstr) :int (win :pointer) (str :string))
+(cffi:defcfun ("mvwaddstr" ncurses-mvwaddstr) :int
+  (win :pointer) (y :int) (x :int) (str :string))
+(cffi:defcfun ("wmove" ncurses-wmove) :int (win :pointer) (y :int) (x :int))
+(cffi:defcfun ("wrefresh" ncurses-wrefresh) :int (win :pointer))
 
 (cffi:defcfun ("COLOR_PAIR" ncurses-color-pair) :int (pair-number :int))
 (cffi:defcfun ("attron" ncurses-attron) :int (at :int))
