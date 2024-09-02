@@ -235,5 +235,7 @@
                  (move-user *last-dir*))
              (repl)))))
 
-(restart-maze 20 20)
-(repl)
+(defun init-fun ()
+  (restart-maze 20 20)
+  (repl))
+
