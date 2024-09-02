@@ -240,8 +240,19 @@
   
   (restart-maze 20 20)
 
-  (key-input)
-  (ncurses-endwin)
+  (ncurses-attron (ncurses-color-pair menu-light-pair))
+  (ncurses-mvhline 2 0 (char-code #\space) 20)
+  (ncurses-attroff (ncurses-color-pair menu-light-pair))
+  (let ((game-board-windows (ncurses-newwin 5 10 5 10)))
+    (ncurses-wbkgd game-board-windows (ncurses-color-pair menu-light-pair))
+    (ncurses-wclear game-board-windows)
+    ;(ncurses-mvwaddstr game-board-windows 0 0 "Hello")
+    (ncurses-waddstr game-board-windows "Hello, 现在可以显示中文吗？")
+    (ncurses-wrefresh game-board-windows)
+    
+    (ncurses-refresh)
+    (key-input)
+    (ncurses-endwin))
 
   (repl))
 
