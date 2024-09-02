@@ -236,6 +236,12 @@
              (repl)))))
 
 (defun init-fun ()
+  (init-TUI)
+  
   (restart-maze 20 20)
+
+  (key-input)
+  (ncurses-endwin)
+
   (repl))
 
