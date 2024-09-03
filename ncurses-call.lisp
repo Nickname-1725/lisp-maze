@@ -14,6 +14,11 @@
 (cffi:defcenum local-category
   (lc-all 0) (lc-collate 1) (lc-ctype 2) (lc-monetary 3) (lc-numeric 4) (lc-time 5))
 
+(defconstant +key-up+ 259)
+(defconstant +key-down+ 258)
+(defconstant +key-left+ 260)
+(defconstant +key-right+ 261)
+
 (cffi:defcfun ("initscr" ncurses-initscr) :pointer)
 (cffi:defcfun ("setlocale" ncurses-setlocale) :string
   (category local-category) (locale :string))
@@ -45,24 +50,12 @@
 (cffi:defcfun ("attroff" ncurses-attroff) :int (at :int))
 (cffi:defcfun ("mvhline" ncurses-mvhline) :int (y :int) (x :int) (ch :char) (n :int))
 
-(cffi:defcfun ("getch" ncurses-getch) :char)
+(cffi:defcfun ("getch" ncurses-getch) :int)
 
 (cffi:defcvar ("LINES" ncurses-lines) :int)
 (cffi:defcvar ("COLS" ncurses-cols) :int)
 
 (defparameter *stdscr* nil)
-
-;(defun draw-map ()
-;  ;(let (y x))
-;  (ncurses-attron (ncurses-color-pair grass-pair))
-;  (ncurses-mvhline 2 0 (char-code #\space) 20)
-;  (ncurses-attroff (ncurses-color-pair grass-pair)))
-
-(defun key-input ()
-  (let ((ch (ncurses-getch)))
-    (cond ((eql (char-code #\q) ch)
-           nil)
-          (t (key-input)))))
 
 (defun init-TUI ()
   (ncurses-setlocale lc-all "")
