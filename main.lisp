@@ -240,16 +240,13 @@
   
   (restart-maze 20 20)
 
-  (ncurses-attron (ncurses-color-pair menu-light-pair))
-  ;(ncurses-mvhline 2 0 (char-code #\space) 20)
-  (ncurses-attroff (ncurses-color-pair menu-light-pair))
   (let* ((playground-size-y 20)
          (playground-size-x (1+ (* 2 20)))
          (game-board-windows
            (ncurses-newwin playground-size-y playground-size-x
                            (ash (- ncurses-lines playground-size-y) -1)
                            (ash (- ncurses-cols playground-size-x) -1))))
-    (ncurses-wbkgd game-board-windows (ncurses-color-pair menu-light-pair))
+    (ncurses-wbkgd game-board-windows (ncurses-color-pair playground-pair))
     (ncurses-wclear game-board-windows)
     ;(ncurses-mvwaddstr game-board-windows 0 0 "Hello")
     (ncurses-waddstr game-board-windows (draw-maze))
