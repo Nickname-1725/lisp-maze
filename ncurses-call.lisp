@@ -45,6 +45,9 @@
 
 (cffi:defcfun ("getch" ncurses-getch) :char)
 
+(cffi:defcvar ("LINES" ncurses-lines) :int)
+(cffi:defcvar ("COLS" ncurses-cols) :int)
+
 (defparameter *stdscr* nil)
 
 ;(defun draw-map ()
