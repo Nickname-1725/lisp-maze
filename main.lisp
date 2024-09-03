@@ -138,10 +138,10 @@
              (when (link-p i-j 's) (setf enum (+ enum (ash 1 1))))
              (when (link-p i-j 'a) (setf enum (+ enum (ash 1 2))))
              (when (link-p i-j 'd) (setf enum (+ enum (ash 1 3))))
-             (let ((crossing-list '("O " "↑ " "↓ " "│ "
-                                    "─ " "┘ " "┐ " "┤ "
-                                    " ─" "└─" "┌─" "├─"
-                                    "──" "┴─" "┬─" "┼─"
+             (let ((crossing-list '("O " "╙ " "╓ " "║ "
+                                    "═ " "╝ " "╗ " "╣ "
+                                    " ═" "╚═" "╔═" "╠═"
+                                    "══" "╩═" "╦═" "╬═"
                                     "X ")))
                (cond ((eq-ij-p i-j *user-ij*)
                       (car crossing-list))
@@ -150,10 +150,10 @@
                      (t (nth enum crossing-list)))))))
     (let ((text-maze ""))
       (dotimes (i *H-maze*)
-        (let ((text-row ""))
+        (let ((text-row " "))
           (dotimes (j *W-maze*)
             (setf text-row (concatenate 'string  text-row (draw-crossing `(,i ,j)))))
-         (setf text-maze (concatenate 'string text-maze (format nil "~%") text-row))))
+          (setf text-maze (concatenate 'string text-maze text-row))))
       text-maze)))
 
 ;;;; REPL
@@ -241,18 +241,24 @@
   (restart-maze 20 20)
 
   (ncurses-attron (ncurses-color-pair menu-light-pair))
-  (ncurses-mvhline 2 0 (char-code #\space) 20)
+  ;(ncurses-mvhline 2 0 (char-code #\space) 20)
   (ncurses-attroff (ncurses-color-pair menu-light-pair))
-  (let ((game-board-windows (ncurses-newwin 5 10 5 10)))
+  (let* ((playground-size-y 20)
+         (playground-size-x (1+ (* 2 20)))
+         (game-board-windows
+           (ncurses-newwin playground-size-y playground-size-x
+                           (ash (- ncurses-lines playground-size-y) -1)
+                           (ash (- ncurses-cols playground-size-x) -1))))
     (ncurses-wbkgd game-board-windows (ncurses-color-pair menu-light-pair))
     (ncurses-wclear game-board-windows)
     ;(ncurses-mvwaddstr game-board-windows 0 0 "Hello")
-    (ncurses-waddstr game-board-windows "Hello, 现在可以显示中文吗？")
+    (ncurses-waddstr game-board-windows (draw-maze))
     (ncurses-wrefresh game-board-windows)
     
     (ncurses-refresh)
     (key-input)
     (ncurses-endwin))
 
-  (repl))
+  ;(repl)
+  )
 
