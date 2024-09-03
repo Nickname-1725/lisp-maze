@@ -10,7 +10,7 @@
   (color-black 0) (color-red 1) (color-green 2) (color-yellow 3)
   (color-blue 4) (color-magenta 5) (color-cyan 6) (color-white 7))
 (cffi:defcenum texture-pair
-  (playground-pair 0) (menu-light-pair 1) (menu-dark-pair 2))
+  (playground-pair 1) (menu-light-pair 2) (menu-dark-pair 3))
 (cffi:defcenum local-category
   (lc-all 0) (lc-collate 1) (lc-ctype 2) (lc-monetary 3) (lc-numeric 4) (lc-time 5))
 
@@ -71,7 +71,7 @@
   
   ;; 初始化颜色
   (ncurses-start-color)
-  (ncurses-init-pair playground-pair color-black color-black)
+  (ncurses-init-pair playground-pair color-black color-white)
   (ncurses-init-pair menu-light-pair color-black color-cyan)
   (ncurses-init-pair menu-dark-pair color-white color-blue)
   
