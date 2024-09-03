@@ -30,6 +30,8 @@
 (cffi:defcfun ("newwin" ncurses-newwin) :pointer
   (num-of-lines :int) (num-of-cols :int) (start-y :int) (start-x :int))
 (cffi:defcfun ("delwin" ncurses-delwin) :int (window-to-delete :pointer))
+(cffi:defcfun ("derwin" ncurses-derwin) :pointer
+  (win :pointer) (lines :int) (cols :int)  (y :int) (x :int))
 (cffi:defcfun ("wbkgd" ncurses-wbkgd) :int (win :pointer) (character texture-pair))
 (cffi:defcfun ("wclear" ncurses-wclear) :int (win :pointer))
 (cffi:defcfun ("waddstr" ncurses-waddstr) :int (win :pointer) (str :string))
