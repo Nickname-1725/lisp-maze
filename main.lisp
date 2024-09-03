@@ -235,22 +235,46 @@
                  (move-user *last-dir*))
              (repl)))))
 
+(defun dump-text-window (win text)
+  (ncurses-wclear win)
+  (ncurses-waddstr win text)
+  (ncurses-wrefresh win))
+
 (defun init-fun ()
   (init-TUI)
   
   (restart-maze 20 20)
 
-  (let* ((playground-size-y 20)
+  (let* ((side-bar-width 25)
+         (playground-size-y 20)
          (playground-size-x (1+ (* 2 20)))
          (game-board-windows
-           (ncurses-newwin playground-size-y playground-size-x
-                           (ash (- ncurses-lines playground-size-y) -1)
-                           (ash (- ncurses-cols playground-size-x) -1))))
-    (ncurses-wbkgd game-board-windows (ncurses-color-pair playground-pair))
-    (ncurses-wclear game-board-windows)
-    ;(ncurses-mvwaddstr game-board-windows 0 0 "Hello")
-    (ncurses-waddstr game-board-windows (draw-maze))
-    (ncurses-wrefresh game-board-windows)
+           (ncurses-newwin
+            playground-size-y (+ playground-size-x side-bar-width)
+            (ash (- ncurses-lines playground-size-y) -1)
+            (ash (- ncurses-cols playground-size-x side-bar-width) -1)))
+         (playground-window
+           (ncurses-derwin
+            game-board-windows playground-size-y playground-size-x 0 0))
+         (timerun-window
+           (ncurses-derwin
+            game-board-windows 1 side-bar-width 0 playground-size-x))
+         (message-window
+           (ncurses-derwin
+            game-board-windows 2 side-bar-width 1 playground-size-x))
+         (tips-window
+           (ncurses-derwin
+            game-board-windows (- playground-size-y 1 2)
+            side-bar-width 3 playground-size-x)))
+    (ncurses-wbkgd playground-window (ncurses-color-pair playground-pair))
+    (ncurses-wbkgd timerun-window (ncurses-color-pair menu-light-pair))
+    (ncurses-wbkgd message-window (ncurses-color-pair menu-dark-pair))
+    (ncurses-wbkgd tips-window (ncurses-color-pair menu-light-pair))
+
+    (dump-text-window playground-window (draw-maze))
+    (dump-text-window timerun-window "time: 00:00.00")
+    (dump-text-window message-window "Press [Space] key to start.")
+    (dump-text-window tips-window "[q/Q] for quit.")
     
     (ncurses-refresh)
     (key-input)
@@ -258,4 +282,3 @@
 
   ;(repl)
   )
-
