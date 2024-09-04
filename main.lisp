@@ -285,13 +285,15 @@
                               (code-char code))))
                  (unless (or (eql #\q ch) (eql #\Q ch) (eql #\esc ch))
                    (cond ((let ((dir (cond
-                                       (ch ch)
+                                       ((case ch
+                                          (#\w 'w) (#\a 'a) (#\s 's) (#\d 'd)
+                                          (#\W 'w) (#\A 'a) (#\S 's) (#\D 'd)))
                                        ((eql +key-up+ code) 'w)
                                        ((eql +key-left+ code) 'a)
                                        ((eql +key-down+ code) 's)
                                        ((eql +key-right+ code) 'd))))
                             (dump-text-window tips-window (format nil "~a." code))
-                            (move-user (read-from-string (string dir)))
+                            (move-user dir)
                             (cffi:with-foreign-object (wchar '(:struct cchar-t))
                               (ncurses-mvwin-wch playground-window (car *user-ij*)
                                                  (1+ (* 2 (cadr *user-ij*))) wchar)
