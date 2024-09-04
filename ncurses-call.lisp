@@ -44,6 +44,9 @@
   (win :pointer) (y :int) (x :int) (str :string))
 (cffi:defcfun ("wmove" ncurses-wmove) :int (win :pointer) (y :int) (x :int))
 (cffi:defcfun ("wrefresh" ncurses-wrefresh) :int (win :pointer))
+(cffi:defcfun ("mvwin_wch" ncurses-mvwin-wch) :int
+  (win :pointer) (y :int) (x :int) (wch :pointer))
+(cffi:defcstruct cchar-t (attr :uint32) (chars :uint32))
 
 (cffi:defcfun ("COLOR_PAIR" ncurses-color-pair) :int (pair-number :int))
 (cffi:defcfun ("attron" ncurses-attron) :int (at :int))
