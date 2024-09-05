@@ -138,14 +138,12 @@
              (when (link-p i-j 's) (setf enum (+ enum (ash 1 1))))
              (when (link-p i-j 'a) (setf enum (+ enum (ash 1 2))))
              (when (link-p i-j 'd) (setf enum (+ enum (ash 1 3))))
-             (let ((crossing-list '("O " "╙ " "╓ " "║ "
+             (let ((crossing-list '("  " "╙ " "╓ " "║ "
                                     "═ " "╝ " "╗ " "╣ "
                                     " ═" "╚═" "╔═" "╠═"
                                     "══" "╩═" "╦═" "╬═"
                                     "X ")))
-               (cond ((eq-ij-p i-j *user-ij*)
-                      (car crossing-list))
-                     ((eq-ij-p i-j `(,(1- *H-maze*) ,(1- *W-maze*)))
+               (cond ((eq-ij-p i-j `(,(1- *H-maze*) ,(1- *W-maze*)))
                       (nth 16 crossing-list))
                      (t (nth enum crossing-list)))))))
     (let ((text-maze ""))
@@ -283,6 +281,19 @@
   (ncurses-waddstr win text)
   (ncurses-wrefresh win))
 
+(defun register-patch-to-window (win)
+  (let (char-last y-last x-last)
+    (lambda (y x str)
+      (when char-last
+        (ncurses-mvwaddstr win y-last x-last (string char-last)))
+      (cffi:with-foreign-object (wchar '(:struct cchar-t))
+        (ncurses-mvwin-wch win y x wchar)
+        (setf char-last (code-char (cffi:foreign-slot-value
+                                    wchar '(:struct cchar-t) 'chars)))
+        (setf y-last y) (setf x-last x))
+      (ncurses-mvwaddstr win y x str)
+      (ncurses-wrefresh win))))
+
 (defun init-fun ()
   (init-TUI)
   
@@ -294,7 +305,8 @@
     (dump-text-window message-window "Press [Space] key to start.")
     (dump-text-window tips-window "[q/Q] for quit.")
 
-    (let ((user-handler (user-handler-create)))
+    (let ((user-handler (user-handler-create))
+          (patch-maze (register-patch-to-window playground-window)))
       (labels ((key-input ()
                  (let* ((code (ncurses-getch))
                         (ch (if (and (< code 256) (>= code 0))
@@ -311,13 +323,10 @@
                               (dump-text-window tips-window (format nil "~a." code))
                               (let ((user-ij (funcall user-handler dir)))
                                 (when user-ij
-                                  (cffi:with-foreign-object (wchar '(:struct cchar-t))
-                                    (ncurses-mvwin-wch playground-window (car user-ij)
-                                                       (1+ (* 2 (cadr user-ij))) wchar)
-                                    (dump-text-window timerun-window (format nil "~a." (code-char (cffi:foreign-slot-value wchar '(:struct cchar-t) 'chars)))))
-                                  (dump-text-window playground-window (draw-maze))))))
+                                  (funcall patch-maze (car user-ij)
+                                           (1+ (* 2 (cadr user-ij))) "O")))))
                            (t nil))
-                   (key-input)))))
+                     (key-input)))))
         (ncurses-refresh)
         (key-input))))
   (ncurses-endwin))
