@@ -20,6 +20,11 @@
 (defconstant +key-right+ 261)
 
 (cffi:defcfun ("initscr" ncurses-initscr) :pointer)
+; curs_set: visibility: 光标可见性
+; - 0: 隐藏
+; - 1: 可见
+; - 2: 闪烁 
+(cffi:defcfun ("curs_set" ncurses-curs-set) :int (visibility :int))
 (cffi:defcfun ("setlocale" ncurses-setlocale) :string
   (category local-category) (locale :string))
 (cffi:defcfun ("cbreak" ncurses-cbreak) :void)
@@ -63,6 +68,7 @@
 (defun init-TUI ()
   (ncurses-setlocale lc-all "")
   (setf *stdscr* (ncurses-initscr))
+  (ncurses-curs-set 0)
   (ncurses-cbreak)
   (ncurses-noecho)
   (ncurses-keypad *stdscr* t)
