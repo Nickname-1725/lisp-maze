@@ -190,13 +190,13 @@
               nil)))))
 
 (defun information-maze ()
-  (format t "~c[2J~c[H" #\escape #\escape)
-  (format t "[W] for up; ~%[A] for left; ~%[S] for down; ~%[D] for right; ~%")
-  (format t "Directions can be input without a break. ~%")
-  (format t "You last direction is remembered. ~%")
-  (format t "[q] to leave the game. ~%")
-  (format t "[r] to reshape the maze and restart the game. ~%")
-  (format t "~a~%" (draw-maze))
+  ;(format t "~c[2J~c[H" #\escape #\escape)
+  ;(format t "[W] for up; ~%[A] for left; ~%[S] for down; ~%[D] for right; ~%")
+  ;(format t "Directions can be input without a break. ~%")
+  ;(format t "You last direction is remembered. ~%")
+  ;(format t "[q] to leave the game. ~%")
+  ;(format t "[r] to reshape the maze and restart the game. ~%")
+  ;(format t "~a~%" (draw-maze))
   (if (eq-ij-p *user-ij* `(,(1- *H-maze*) ,(1- *W-maze*)))
       (labels ((repl-loop ()
                  (format t "You win. Another game? [y/n]~%")
@@ -303,7 +303,11 @@
     (dump-text-window playground-window (draw-maze))
     (dump-text-window timerun-window "time: 00:00.00")
     (dump-text-window message-window "Press [Space] key to start.")
-    (dump-text-window tips-window "[q/Q] for quit.")
+    (dump-text-window tips-window
+                      (format nil "[W] for up; ~%[A] for left; ~@
+                                   [S] for down; ~%[D] for right; ~@
+                                   [q] to leave the game. ~@
+                                   [r] to reshape the maze and restart the game. "))
 
     (let ((user-handler (user-handler-create))
           (patch-maze (register-patch-to-window playground-window)))
@@ -320,7 +324,7 @@
                                          ((eql +key-left+ code) 'a)
                                          ((eql +key-down+ code) 's)
                                          ((eql +key-right+ code) 'd))))
-                              (dump-text-window tips-window (format nil "~a." code))
+                              ;(dump-text-window tips-window (format nil "~a." code))
                               (let ((user-ij (funcall user-handler dir)))
                                 (when user-ij
                                   (funcall patch-maze (car user-ij)
