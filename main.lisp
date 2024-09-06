@@ -213,10 +213,10 @@
              (resize-repl)))
           (t (repl)))))
 
-(defun init-gameboard ()
+(defun init-gameboard (H-maze W-maze)
   (let* ((side-bar-width 25)
-         (playground-size-y 20)
-         (playground-size-x (1+ (* 2 20)))
+         (playground-size-y H-maze)
+         (playground-size-x (1+ (* 2 W-maze)))
          (game-board-windows
            (ncurses-newwin
             playground-size-y (+ playground-size-x side-bar-width)
@@ -230,16 +230,21 @@
             game-board-windows 1 side-bar-width 0 playground-size-x))
          (message-window
            (ncurses-derwin
-            game-board-windows 2 side-bar-width 1 playground-size-x))
+            game-board-windows 2 side-bar-width (+ 1 0) playground-size-x))
+         (input-window
+           (ncurses-derwin
+            game-board-windows 1 side-bar-width (+ 2 1 0) playground-size-x))
          (tips-window
            (ncurses-derwin
-            game-board-windows (- playground-size-y 1 2)
-            side-bar-width 3 playground-size-x)))
+            game-board-windows (- playground-size-y 1 2 1)
+            side-bar-width (+ 1 2 1 0) playground-size-x)))
     (ncurses-wbkgd playground-window (ncurses-color-pair playground-pair))
     (ncurses-wbkgd timerun-window (ncurses-color-pair menu-light-pair))
     (ncurses-wbkgd message-window (ncurses-color-pair menu-dark-pair))
+    (ncurses-wbkgd input-window (ncurses-color-pair input-pair))
     (ncurses-wbkgd tips-window (ncurses-color-pair menu-light-pair))
-    (values playground-window timerun-window message-window tips-window)))
+    (values playground-window timerun-window message-window
+            input-window tips-window)))
 
 (defun dump-text-window (win text)
   (ncurses-wclear win)
@@ -262,10 +267,12 @@
 (defun init-fun ()
   (init-TUI)
   
-  (multiple-value-bind (playground-window timerun-window message-window tips-window)
-      (init-gameboard)
+  (multiple-value-bind (playground-window timerun-window
+                        message-window input-window tips-window)
+      (init-gameboard 20 20)
     (dump-text-window timerun-window "time: 00:00.00")
     (dump-text-window message-window "Press [Space] key to start.")
+    (dump-text-window input-window ">_")
     (dump-text-window tips-window
                       (format nil "[W] for up; ~%[A] for left; ~@
                                    [S] for down; ~%[D] for right; ~@
