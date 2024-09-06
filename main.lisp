@@ -324,9 +324,7 @@
                                                    `(,(1- *H-maze*) ,(1- *W-maze*)))
                                           (re-game-check)
                                           (key-input))
-                                      t) ; 确保最终结果一定为t，从而短路其它分支
-                                    ;(key-input)
-                                    ))))
+                                      t))))) ; 确保结果一定为真，短路其它分支
                            ((case ch (#\r t) (#\R t))
                             (re-shape))
                            (t (key-input))))))
