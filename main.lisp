@@ -295,27 +295,28 @@
                                          ((eql +key-right+ code) 'd))))
                               ;(dump-text-window tips-window (format nil "~a." code))
                               (let ((user-ij (funcall user-handler dir)))
-                                (when user-ij
-                                  (funcall patch-maze (car user-ij)
-                                           (1+ (* 2 (cadr user-ij))) "O"))
-                                (when (eq-ij-p user-ij
-                                               `(,(1- *H-maze*) ,(1- *W-maze*)))
-                                  (dump-text-window message-window
-                                                    "You win. Another game? [y/n]")
-                                  (re-game-check)))))
-                           (t nil))
-                     (key-input))))
+                                (if user-ij
+                                    (progn
+                                      (funcall patch-maze (car user-ij)
+                                               (1+ (* 2 (cadr user-ij))) "O")
+                                      (if (eq-ij-p user-ij
+                                                   `(,(1- *H-maze*) ,(1- *W-maze*)))
+                                          (re-game-check)
+                                          (key-input))
+                                      t) ; 确保最终结果一定为t，从而短路其它分支
+                                    (key-input))))) 
+                           (t (key-input))))))
                (re-game-check ()
+                 (dump-text-window message-window "You win. Another game? [y/n]")
                  (let* ((code (ncurses-getch))
                         (ch (if (and (< code 256) (>= code 0))
                                 (code-char code))))
-                   (if (not (or (eql #\n ch) (eql #\N ch)))
-                       (cond ((or (eql #\y ch) (eql #\Y ch))
-                              ;; 再次开始
-                              (game-on))
-                             (t (re-game-check)))
-                       (dump-text-window message-window
-                                         "Press [Space] key to start.")))))
+                   (unless (or (eql #\n ch) (eql #\N ch))
+                     (cond ((or (eql #\y ch) (eql #\Y ch))
+                            ;; 再次开始
+                            (game-on)
+                            (key-input))
+                           (t (re-game-check)))))))
         (game-on)
         (key-input))))
   (ncurses-endwin))
