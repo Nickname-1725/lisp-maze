@@ -264,6 +264,20 @@
       (ncurses-mvwaddstr win y x str)
       (ncurses-wrefresh win))))
 
+(defun enter-number (win &optional (number 0))
+  (unless (eql 0 number)
+    (dump-text-window win (format nil "~a" number)))
+  (let* ((code (ncurses-getch))
+         (ch (if (and (< code 256) (>= code 0))
+                 (code-char code))))
+    (cond
+      ((case ch (#\space t) (#\newline t))
+       (dump-text-window win "")
+       number)
+      ((and (<= code (char-code #\9)) (>= code (char-code #\0)))
+       (enter-number win (+ (* 10 number) (- code (char-code #\0)))))
+      (t(enter-number win number)))))
+
 (defun init-fun ()
   (init-TUI)
   
@@ -311,7 +325,10 @@
                                           (re-game-check)
                                           (key-input))
                                       t) ; 确保最终结果一定为t，从而短路其它分支
-                                    (key-input))))) 
+                                    ;(key-input)
+                                    ))))
+                           ((case ch (#\r t) (#\R t))
+                            (re-shape))
                            (t (key-input))))))
                (re-game-check ()
                  (dump-text-window message-window "You win. Another game? [y/n]")
@@ -323,7 +340,30 @@
                             ;; 再次开始
                             (game-on)
                             (key-input))
-                           (t (re-game-check)))))))
+                           (t (re-game-check))))))
+               (re-shape ()
+                 "调整迷宫的大小"
+                 (let ((h (enter-number input-window))
+                       (w (enter-number input-window)))
+                   (cond
+                     ((or (< h 2) (< w 2))
+                      (dump-text-window message-window
+                                        "height and width share be at least 2. ")
+                      (re-shape))
+                     ((or (> h 50) (> w 50))
+                      (dump-text-window message-window
+                                        "height and width share be at most 50. ")
+                      (re-shape))
+                     (t (multiple-value-bind (ply-win tim-win msg-win in-win tps-win)
+                            (init-gameboard h w)
+                          (setf playground-window ply-win)
+                          (setf timerun-window tim-win)
+                          (setf message-window msg-win)
+                          (setf input-window in-win)
+                          (setf tips-window tps-win)
+                          ; 需要调和尺寸修改后的矛盾
+                          ; 需要拓展game-on的语法规则，并且在环境中增加迷宫尺寸
+                          (game-on) (key-input)))))))
         (game-on)
         (key-input))))
   (ncurses-endwin))
