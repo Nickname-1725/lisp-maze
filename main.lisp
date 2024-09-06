@@ -162,18 +162,6 @@
   (setf *W-maze* width)
   (setf *table-maze* (generate-table))
   (init-maze `(,(ash *H-maze* -1) ,(ash *W-maze* -1))))
-;(defun move-user (dir)
-;  (let ((usr-ij (copy-list *user-ij*)))
-;    (cond ((eq dir 'w) (incf (car usr-ij) -1))
-;          ((eq dir 'a) (incf (cadr usr-ij) -1))
-;          ((eq dir 's) (incf (car usr-ij) 1))
-;          ((eq dir 'd) (incf (cadr usr-ij) 1))
-;          (t nil))
-;    (if (and (i-j-legal-p usr-ij)
-;             (link-p *user-ij* dir))
-;        (progn
-;          (setf *user-ij* usr-ij)
-;          (setf *last-dir* dir)))))
 (defun user-handler-create ()
   (let ((usr-ij (copy-list *user-ij*)))
     #'(lambda (dir)
@@ -274,10 +262,8 @@
 (defun init-fun ()
   (init-TUI)
   
-  (restart-maze 20 20)
   (multiple-value-bind (playground-window timerun-window message-window tips-window)
       (init-gameboard)
-    (dump-text-window playground-window (draw-maze))
     (dump-text-window timerun-window "time: 00:00.00")
     (dump-text-window message-window "Press [Space] key to start.")
     (dump-text-window tips-window
@@ -285,10 +271,16 @@
                                    [S] for down; ~%[D] for right; ~@
                                    [q] to leave the game. ~@
                                    [r] to reshape the maze and restart the game. "))
-
-    (let ((user-handler (user-handler-create))
+    (ncurses-refresh)
+    
+    (let (user-handler
           (patch-maze (register-patch-to-window playground-window)))
-      (labels ((key-input ()
+      (labels ((game-on ()
+                 (restart-maze 20 20)
+                 (setf user-handler (user-handler-create))
+                 (dump-text-window playground-window (draw-maze))
+                 (dump-text-window message-window "Press [Space] key to start."))
+               (key-input ()
                  (let* ((code (ncurses-getch))
                         (ch (if (and (< code 256) (>= code 0))
                                 (code-char code))))
@@ -320,14 +312,10 @@
                    (if (not (or (eql #\n ch) (eql #\N ch)))
                        (cond ((or (eql #\y ch) (eql #\Y ch))
                               ;; 再次开始
-                              (restart-maze 20 20)
-                              (setf user-handler (user-handler-create))
-                              (dump-text-window playground-window (draw-maze))
-                              (dump-text-window message-window
-                                                "Press [Space] key to start."))
+                              (game-on))
                              (t (re-game-check)))
                        (dump-text-window message-window
                                          "Press [Space] key to start.")))))
-        (ncurses-refresh)
+        (game-on)
         (key-input))))
   (ncurses-endwin))
