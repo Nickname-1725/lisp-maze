@@ -189,27 +189,7 @@
                 (setf usr-ij try-usr))
               nil)))))
 
-;(defun information-maze ()
-  ;(format t "~c[2J~c[H" #\escape #\escape)
-  ;(format t "[W] for up; ~%[A] for left; ~%[S] for down; ~%[D] for right; ~%")
-  ;(format t "Directions can be input without a break. ~%")
-  ;(format t "You last direction is remembered. ~%")
-  ;(format t "[q] to leave the game. ~%")
-  ;(format t "[r] to reshape the maze and restart the game. ~%")
-  ;(format t "~a~%" (draw-maze))
-;  (if (eq-ij-p *user-ij* `(,(1- *H-maze*) ,(1- *W-maze*)))
-;      (labels ((repl-loop ()
-;                 (format t "You win. Another game? [y/n]~%")
-;                 (let* ((cmd-string (string-trim " " (read-line)))
-;                        (cmd (if (eq 0 (length cmd-string))
-;                                 nil (read-from-string cmd-string))))
-;                   (cond ((eq cmd 'y) (restart-maze *H-maze* *W-maze*)(repl))
-;                         ((eq cmd 'n) nil)
-;                         (t (repl-loop))))))
-;        (repl-loop))))
-
 (defun repl()
-  ;(information-maze)
   (let* ((cmd-string (read-line))
          (cmd-list (mapcar #'read-from-string
                            (mapcar #'string
@@ -243,10 +223,7 @@
                             (t (restart-maze h w)
                                (repl))))))
              (resize-repl)))
-          (t ;(if cmd-list
-             ;    (mapcar #'move-user cmd-list)
-             ;    (move-user *last-dir*))
-             (repl)))))
+          (t (repl)))))
 
 (defun init-gameboard ()
   (let* ((side-bar-width 25)
