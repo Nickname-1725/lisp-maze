@@ -22,41 +22,41 @@
                 (setf usr-ij try-usr))
               nil)))))
 
-(defun repl()
-  (let* ((cmd-string (read-line))
-         (cmd-list (mapcar #'read-from-string
-                           (mapcar #'string
-                                   (remove-if #'(lambda(char)
-                                                  (eq char #\ ))
-                                              (coerce cmd-string 'list))))))
-    (cond ((and (eq (length cmd-list) 1) (eq (car cmd-list) 'q)) (quit))
-          ((and (eq (length cmd-list) 1) (eq (car cmd-list) 'r))
-           (flet ((resize-repl()
-                    (format t "Enter 2 numbers to customize the size. ~%")
-                    (let* ((size-pair (read-from-string
-                                       (concatenate 'string "(" (read-line) ")")))
-                           (h (car size-pair))
-                           (w (cadr size-pair)))
-                      (cond ((not (eq 2 (length size-pair)))
-                             (print "Size share be 2 numbers: height and width. ")
-                             (read-line)
-                             (repl))
-                            ((not (and (numberp h) (numberp w)))
-                             (print "That's not numbers. ")
-                             (read-line)
-                             (repl))
-                            ((or (< h 2) (< w 2))
-                             (print "Don't be ridiculous. height and width share be at least 2. ")
-                             (read-line)
-                             (repl))
-                            ((or (> h 50) (> w 50))
-                             (print "Don't be rediculous. height and width share be at most 50. ")
-                             (read-line)
-                             (repl))
-                            (t (restart-maze h w)
-                               (repl))))))
-             (resize-repl)))
-          (t (repl)))))
+;(defun repl()
+;  (let* ((cmd-string (read-line))
+;         (cmd-list (mapcar #'read-from-string
+;                           (mapcar #'string
+;                                   (remove-if #'(lambda(char)
+;                                                  (eq char #\ ))
+;                                              (coerce cmd-string 'list))))))
+;    (cond ((and (eq (length cmd-list) 1) (eq (car cmd-list) 'q)) (quit))
+;          ((and (eq (length cmd-list) 1) (eq (car cmd-list) 'r))
+;           (flet ((resize-repl()
+;                    (format t "Enter 2 numbers to customize the size. ~%")
+;                    (let* ((size-pair (read-from-string
+;                                       (concatenate 'string "(" (read-line) ")")));
+;                           (h (car size-pair))
+;                           (w (cadr size-pair)))
+;                      (cond ((not (eq 2 (length size-pair)))
+;                             (print "Size share be 2 numbers: height and width. ")
+;                             (read-line)
+;                             (repl))
+;                            ((not (and (numberp h) (numberp w)))
+;                             (print "That's not numbers. ")
+;                             (read-line)
+;                             (repl))
+;                            ((or (< h 2) (< w 2))
+;                             (print "Don't be ridiculous. height and width share be at least 2. ")
+;                             (read-line)
+;                             (repl))
+;                            ((or (> h 50) (> w 50))
+;                             (print "Don't be rediculous. height and width share be at most 50. ")
+;                             (read-line)
+;                             (repl))
+;                            (t (restart-maze h w)
+;                               (repl))))))
+;             (resize-repl)))
+;          (t (repl)))))
 
 (defun init-gameboard (H-maze W-maze)
   (let* ((side-bar-width 25)
@@ -110,8 +110,7 @@
       (ncurses-wrefresh win))))
 
 (defun enter-number (win &optional (number 0))
-  (unless (eql 0 number)
-    (dump-text-window win (format nil "~a" number)))
+  (dump-text-window win (format nil "~a" number))
   (let* ((code (ncurses-getch))
          (ch (if (and (< code 256) (>= code 0))
                  (code-char code))))
@@ -150,7 +149,7 @@
                ;; 初始化界面信息
                (dump-text-window timerun-window "time: 00:00.00")
                (dump-text-window message-window "Press [Space] key to start.")
-               (dump-text-window input-window ">_")
+               ;(dump-text-window input-window ">_")
                (dump-text-window
                 tips-window
                 (format nil "[W] for up; ~%[A] for left; ~@
@@ -201,17 +200,21 @@
                            (t (re-game-check))))))
              (re-shape ()
                "调整迷宫的大小"
-               (let ((h (enter-number input-window))
-                     (w (enter-number input-window)))
+               (let ((h (progn
+                          (dump-text-window message-window "Enter 2 numbers. (now the height)")
+                          (enter-number input-window)))
+                     (w (progn
+                          (dump-text-window message-window "Now the width.")
+                          (enter-number input-window))))
                  (cond
                    ((or (< h 2) (< w 2))
                     (dump-text-window message-window
-                                      "height and width share be at least 2. ")
-                    (re-shape))
+                                      "share be at least 2. [Any] key to continue.")
+                    (ncurses-getch) (re-shape))
                    ((or (> h 50) (> w 50))
                     (dump-text-window message-window
-                                      "height and width share be at most 50. ")
-                    (re-shape))
+                                      "share be at most 50. [Any] key to continue.")
+                    (ncurses-getch) (re-shape))
                    (t ; 需要调和尺寸修改后的矛盾
                     ; 需要拓展game-on的语法规则，并且在环境中增加迷宫尺寸
                     (game-on h w) (key-input))))))
