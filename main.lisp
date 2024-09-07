@@ -22,42 +22,6 @@
                 (setf usr-ij try-usr))
               nil)))))
 
-;(defun repl()
-;  (let* ((cmd-string (read-line))
-;         (cmd-list (mapcar #'read-from-string
-;                           (mapcar #'string
-;                                   (remove-if #'(lambda(char)
-;                                                  (eq char #\ ))
-;                                              (coerce cmd-string 'list))))))
-;    (cond ((and (eq (length cmd-list) 1) (eq (car cmd-list) 'q)) (quit))
-;          ((and (eq (length cmd-list) 1) (eq (car cmd-list) 'r))
-;           (flet ((resize-repl()
-;                    (format t "Enter 2 numbers to customize the size. ~%")
-;                    (let* ((size-pair (read-from-string
-;                                       (concatenate 'string "(" (read-line) ")")));
-;                           (h (car size-pair))
-;                           (w (cadr size-pair)))
-;                      (cond ((not (eq 2 (length size-pair)))
-;                             (print "Size share be 2 numbers: height and width. ")
-;                             (read-line)
-;                             (repl))
-;                            ((not (and (numberp h) (numberp w)))
-;                             (print "That's not numbers. ")
-;                             (read-line)
-;                             (repl))
-;                            ((or (< h 2) (< w 2))
-;                             (print "Don't be ridiculous. height and width share be at least 2. ")
-;                             (read-line)
-;                             (repl))
-;                            ((or (> h 50) (> w 50))
-;                             (print "Don't be rediculous. height and width share be at most 50. ")
-;                             (read-line)
-;                             (repl))
-;                            (t (restart-maze h w)
-;                               (repl))))))
-;             (resize-repl)))
-;          (t (repl)))))
-
 (defun init-gameboard (H-maze W-maze)
   (let* ((side-bar-width 25)
          (playground-size-y H-maze)
@@ -148,8 +112,7 @@
                (setf h-maze h) (setf w-maze w)
                ;; 初始化界面信息
                (dump-text-window timerun-window "time: 00:00.00")
-               (dump-text-window message-window "Press [Space] key to start.")
-               ;(dump-text-window input-window ">_")
+               (dump-text-window message-window "Now find the 'X' mark.")
                (dump-text-window
                 tips-window
                 (format nil "[W] for up; ~%[A] for left; ~@
@@ -158,8 +121,7 @@
                              [r] to reshape the maze and restart the game. "))
                
                (restart-maze h w)
-               (dump-text-window playground-window (draw-maze))
-               (dump-text-window message-window "Press [Space] key to start."))
+               (dump-text-window playground-window (draw-maze)))
              (key-input ()
                (let* ((code (ncurses-getch))
                       (ch (if (and (< code 256) (>= code 0))
