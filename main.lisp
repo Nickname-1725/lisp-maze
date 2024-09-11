@@ -86,6 +86,15 @@
        (enter-number win (+ (* 10 number) (- code (char-code #\0)))))
       (t(enter-number win number)))))
 
+(defun start-timer (interval call-back)
+  (let ((time-total 0))
+    (bt:make-thread
+     (lambda ()
+       (loop
+         (funcall call-back time-total)
+         (sleep interval)
+         (setf time-total (+ time-total interval)))))))
+
 (defun init-fun ()
   (init-TUI)
   
@@ -111,7 +120,12 @@
                (setf user-handler (user-handler-create))
                (setf h-maze h) (setf w-maze w)
                ;; 初始化界面信息
-               (dump-text-window timerun-window "time: 00:00.00")
+               ;(dump-text-window timerun-window "time: 00:00.00")
+               (start-timer
+                0.07 #'(lambda (time) ; 作为妥协考虑，体现最后一位的滚动
+                         (multiple-value-bind (min s) (truncate time 60)
+                           (dump-text-window timerun-window
+                            (format nil"time: ~2,'0d:~5,2f" min s)))))
                (dump-text-window message-window "Now find the 'X' mark.")
                (dump-text-window
                 tips-window
