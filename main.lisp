@@ -167,6 +167,7 @@
                                         (key-input))
                                     t))))) ; 确保结果一定为真，短路其它分支
                          ((case ch (#\r t) (#\R t))
+                          (bt:destroy-thread thread-timer)
                           (re-shape))
                          (t (key-input))))))
              (re-game-check ()
