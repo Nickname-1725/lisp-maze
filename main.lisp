@@ -128,8 +128,12 @@
                      (start-timer
                       0.07 #'(lambda (time) ; 作为妥协考虑，体现最后一位的滚动
                                (multiple-value-bind (min s) (truncate time 60)
-                                 (dump-text-window timerun-window
-                                  (format nil"time: ~2,'0d:~5,2f" min s))))))
+                                 (multiple-value-bind (s raw-cent-s) (truncate s 1)
+                                   (let ((cent-s (floor (* 100 raw-cent-s))))
+                                     (dump-text-window
+                                      timerun-window
+                                      (format nil "time: ~2,'0d:~2,'0d.~2,'0d"
+                                              min s cent-s))))))))
                (dump-text-window message-window "Now find the 'X' mark.")
                (dump-text-window
                 tips-window
