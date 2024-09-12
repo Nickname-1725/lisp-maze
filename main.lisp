@@ -55,23 +55,25 @@
     (values playground-window timerun-window message-window
             input-window tips-window)))
 
-(defun dump-text-window (win text)
-  (ncurses-wclear win)
-  (ncurses-waddstr win text)
-  (ncurses-wrefresh win))
-
-(defun register-patch-to-window (win)
-  (let (char-last y-last x-last)
-    (lambda (y x str)
-      (when char-last
-        (ncurses-mvwaddstr win y-last x-last (string char-last)))
-      (cffi:with-foreign-object (wchar '(:struct cchar-t))
-        (ncurses-mvwin-wch win y x wchar)
-        (setf char-last (code-char (cffi:foreign-slot-value
-                                    wchar '(:struct cchar-t) 'chars)))
-        (setf y-last y) (setf x-last x))
-      (ncurses-mvwaddstr win y x str)
-      (ncurses-wrefresh win))))
+(let ((win-mutex (bt:make-lock "window")))
+  (defun dump-text-window (win text)
+    (bt:with-lock-held (win-mutex)
+      (ncurses-wclear win)
+      (ncurses-waddstr win text)
+      (ncurses-wrefresh win)))
+  (defun register-patch-to-window (win)
+    (let (char-last y-last x-last)
+      (lambda (y x str)
+        (bt:with-lock-held (win-mutex)
+          (when char-last
+            (ncurses-mvwaddstr win y-last x-last (string char-last)))
+          (cffi:with-foreign-object (wchar '(:struct cchar-t))
+            (ncurses-mvwin-wch win y x wchar)
+            (setf char-last (code-char (cffi:foreign-slot-value
+                                        wchar '(:struct cchar-t) 'chars)))
+            (setf y-last y) (setf x-last x))
+          (ncurses-mvwaddstr win y x str)
+          (ncurses-wrefresh win))))))
 
 (defun enter-number (win &optional (number 0))
   (dump-text-window win (format nil "~a" number))
@@ -87,6 +89,7 @@
       (t(enter-number win number)))))
 
 (defun start-timer (interval call-back)
+  "构造一个计时器线程，返回线程，立即执行"
   (let ((time-total 0))
     (bt:make-thread
      (lambda ()
@@ -99,7 +102,7 @@
   (init-TUI)
   
   (let (playground-window timerun-window message-window input-window tips-window
-        user-handler patch-maze h-maze w-maze)
+        user-handler patch-maze h-maze w-maze thread-timer)
     (labels ((game-on (h w)
                (ncurses-clear)
                (ncurses-refresh)
@@ -121,11 +124,12 @@
                (setf h-maze h) (setf w-maze w)
                ;; 初始化界面信息
                ;(dump-text-window timerun-window "time: 00:00.00")
-               (start-timer
-                0.07 #'(lambda (time) ; 作为妥协考虑，体现最后一位的滚动
-                         (multiple-value-bind (min s) (truncate time 60)
-                           (dump-text-window timerun-window
-                            (format nil"time: ~2,'0d:~5,2f" min s)))))
+               (setf thread-timer
+                     (start-timer
+                      0.07 #'(lambda (time) ; 作为妥协考虑，体现最后一位的滚动
+                               (multiple-value-bind (min s) (truncate time 60)
+                                 (dump-text-window timerun-window
+                                  (format nil"time: ~2,'0d:~5,2f" min s))))))
                (dump-text-window message-window "Now find the 'X' mark.")
                (dump-text-window
                 tips-window
@@ -157,7 +161,9 @@
                                              (1+ (* 2 (cadr user-ij))) "O")
                                     (if (eq-ij-p user-ij
                                                  `(,(1- *H-maze*) ,(1- *W-maze*)))
-                                        (re-game-check)
+                                        (progn ; 游戏结束(胜利)
+                                          (bt:destroy-thread thread-timer)
+                                          (re-game-check))
                                         (key-input))
                                     t))))) ; 确保结果一定为真，短路其它分支
                          ((case ch (#\r t) (#\R t))
@@ -173,7 +179,7 @@
                           ;; 再次开始
                           (game-on h-maze w-maze)
                           (key-input))
-                           (t (re-game-check))))))
+                         (t (re-game-check))))))
              (re-shape ()
                "调整迷宫的大小"
                (let ((h (progn
